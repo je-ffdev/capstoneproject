@@ -1,0 +1,339 @@
+
+<h2 class="sr-only">NHS England mortality inequality dashboard showing four findings: deprivation gradients, ethnic disparities, the deprivation-ethnicity interaction for diabetes, and regional mortality variation.</h2>
+
+<style>
+.dash-header { padding: 1.5rem 0 1rem; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 1.5rem; }
+.dash-title { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
+.dash-sub { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+.finding-label { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-tertiary); margin: 0 0 4px; }
+.section-title { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
+.section-desc { font-size: 13px; color: var(--color-text-secondary); margin: 0 0 1rem; line-height: 1.5; }
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+.stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.stat-label { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px; }
+.stat-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+.stat-note { font-size: 11px; color: var(--color-text-tertiary); margin: 2px 0 0; }
+.section-block { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.section-block:last-child { border-bottom: none; }
+.tab-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.tab-btn { font-size: 12px; padding: 5px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; }
+.tab-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+.legend-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-secondary); }
+.legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+.heatmap-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.heatmap-table th { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); padding: 4px 6px; text-align: right; }
+.heatmap-table th:first-child { text-align: left; }
+.heatmap-table td { padding: 5px 6px; text-align: right; border-radius: 3px; font-size: 12px; font-weight: 500; }
+.heatmap-table td:first-child { text-align: left; color: var(--color-text-primary); font-weight: 400; }
+.heatmap-table tr:hover td { outline: 1px solid var(--color-border-secondary); }
+</style>
+
+<div class="dash-header">
+  <p class="dash-title">The Geography of Preventable Death in England</p>
+  <p class="dash-sub">Mortality inequality by deprivation, ethnicity and region &nbsp;·&nbsp; ONS data, March 2021 – January 2023</p>
+</div>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <p class="stat-label">All-cause mortality gap</p>
+    <p class="stat-value">+86%</p>
+    <p class="stat-note">Most vs least deprived</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">COPD deprivation ratio</p>
+    <p class="stat-value">4.69×</p>
+    <p class="stat-note">Highest of 30 conditions</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Bangladeshi diabetes vs White British (equal wealth)</p>
+    <p class="stat-value">5.03×</p>
+    <p class="stat-note">Least deprived quintile</p>
+  </div>
+</div>
+
+<div class="section-block">
+  <p class="finding-label">Finding 1</p>
+  <p class="section-title">Deprivation gradient by condition</p>
+  <p class="section-desc">Age-standardised mortality rate ratio: most deprived vs least deprived decile. Select a condition group to filter.</p>
+  <div class="tab-row" id="grp-tabs"></div>
+  <div class="legend-row">
+    <span class="legend-item"><span class="legend-swatch" style="background:#E24B4A"></span>4× or more</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:#EF9F27"></span>2–4×</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:#639922"></span>1–2×</span>
+    <span class="legend-item"><span class="legend-swatch" style="background:#378ADD"></span>Below 1× (reverse)</span>
+  </div>
+  <div style="position:relative;width:100%;height:340px;"><canvas id="chart1" role="img" aria-label="Bar chart of deprivation rate ratios for conditions, highest COPD at 4.69x"></canvas></div>
+</div>
+
+<div class="section-block">
+  <p class="finding-label">Finding 2</p>
+  <p class="section-title">Ethnic mortality ratios vs White British baseline</p>
+  <p class="section-desc">Select an ethnic group to see how their mortality compares to White British across all conditions.</p>
+  <div class="tab-row" id="eth-tabs"></div>
+  <div style="position:relative;width:100%;height:340px;"><canvas id="chart2" role="img" aria-label="Bar chart showing ethnic mortality rate ratios vs White British baseline"></canvas></div>
+</div>
+
+<div class="section-block">
+  <p class="finding-label">Finding 3 — Diabetes mortality by ethnicity × deprivation</p>
+  <p class="section-title">Deprivation does not explain South Asian diabetes deaths</p>
+  <p class="section-desc">Age-standardised rate per 100,000. Even in the least deprived quintile, Bangladeshi mortality (379.4) is 5× White British (75.5).</p>
+  <table class="heatmap-table" id="heatmap-table" aria-label="Diabetes mortality heatmap by ethnicity and deprivation quintile"></table>
+</div>
+
+<div class="section-block">
+  <p class="finding-label">Finding 4</p>
+  <p class="section-title">Regional all-cause mortality across England</p>
+  <p class="section-desc">Deaths per 100,000 person-years. Select a condition to compare regions.</p>
+  <div class="tab-row" id="cond-tabs"></div>
+  <div style="position:relative;width:100%;height:300px;"><canvas id="chart4" role="img" aria-label="Horizontal bar chart comparing mortality rates across 9 NHS England regions"></canvas></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const deprivData = [
+  {c:'Chronic Obstructive Pulmonary Disease',g:'Respiratory',r:4.69},
+  {c:'Lung Cancer',g:'Cancer',r:3.51},
+  {c:'Asthma',g:'Respiratory',r:2.98},
+  {c:'Diabetes',g:'Metabolic',r:2.87},
+  {c:'Head & Neck Cancer',g:'Cancer',r:2.57},
+  {c:'Cardiac Arrest',g:'Cardiovascular',r:2.55},
+  {c:'Covid-19',g:'Infection',r:2.45},
+  {c:'Chronic Ischaemic Heart Disease',g:'Cardiovascular',r:2.31},
+  {c:'Aortic Disease',g:'Cardiovascular',r:2.30},
+  {c:'Myocardial Infarction',g:'Cardiovascular',r:2.29},
+  {c:'Pneumonia',g:'Infection',r:2.29},
+  {c:'Chronic Kidney Disease',g:'Metabolic',r:2.24},
+  {c:'Hypertensive Diseases',g:'Cardiovascular',r:2.06},
+  {c:'Liver & Biliary Tract Cancer',g:'Cancer',r:1.96},
+  {c:'All Cause Mortality',g:'All',r:1.86},
+  {c:'Heart Failure',g:'Cardiovascular',r:1.84},
+  {c:'Stomach & Oesophageal Cancer',g:'Cancer',r:1.82},
+  {c:'Stroke',g:'Cardiovascular',r:1.71},
+  {c:'Atrial Fibrillation',g:'Cardiovascular',r:1.65},
+  {c:'Dementia & Alzheimer\'s',g:'Neurological',r:1.62},
+  {c:'Kidney Cancer',g:'Cancer',r:1.52},
+  {c:'Bladder Cancer',g:'Cancer',r:1.50},
+  {c:'Colorectal Cancer',g:'Cancer',r:1.33},
+  {c:'Breast Cancer',g:'Cancer',r:1.20},
+  {c:'Blood Cancer',g:'Cancer',r:1.17},
+  {c:'Mesothelioma',g:'Cancer',r:1.03},
+  {c:'Brain Tumours',g:'Cancer',r:0.97},
+  {c:'Malignant Melanoma',g:'Cancer',r:0.67},
+];
+
+const groups = ['All',...[...new Set(deprivData.map(d=>d.g))].filter(g=>g!=='All')];
+let activeGrp = 'All';
+
+function barColor(r){
+  if(r>=4) return '#E24B4A';
+  if(r>=2) return '#EF9F27';
+  if(r>=1) return '#639922';
+  return '#378ADD';
+}
+
+function buildGrpTabs(){
+  const el = document.getElementById('grp-tabs');
+  el.innerHTML = groups.map(g=>`<button class="tab-btn${g===activeGrp?' active':''}" onclick="setGrp('${g}')">${g}</button>`).join('');
+}
+
+let chart1;
+function renderChart1(){
+  const filtered = activeGrp==='All'?deprivData:deprivData.filter(d=>d.g===activeGrp);
+  const labels = filtered.map(d=>d.c);
+  const vals = filtered.map(d=>d.r);
+  const colors = vals.map(barColor);
+  const ctx = document.getElementById('chart1').getContext('2d');
+  if(chart1) chart1.destroy();
+  const h = Math.max(280, labels.length*38+80);
+  document.getElementById('chart1').parentElement.style.height = h+'px';
+  chart1 = new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toFixed(2)+'× ratio'}}},
+      scales:{
+        x:{min:0,max:5.2,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},callback:v=>v+'×'}},
+        y:{grid:{display:false},ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+window.setGrp = function(g){
+  activeGrp=g;
+  buildGrpTabs();
+  renderChart1();
+};
+
+const ethData = {
+  'Bangladeshi':[
+    {c:'Asthma',r:3.95},{c:'Diabetes',r:3.74},{c:'Chronic Kidney Disease',r:2.51},
+    {c:'Covid-19',r:2.24},{c:'Myocardial Infarction',r:2.04},{c:'Hypertensive Diseases',r:2.02},
+    {c:'Liver & Biliary Tract Cancer',r:1.94},{c:'Cardiac Arrest',r:1.66},{c:'Stroke',r:1.57},
+    {c:'Chronic Ischaemic Heart Disease',r:1.44},{c:'Pneumonia',r:1.29},{c:'Head & Neck Cancer',r:1.27},
+    {c:'Dementia',r:1.07},{c:'Heart Failure',r:0.96},{c:'All Cause Mortality',r:0.94},
+    {c:'Stomach Cancer',r:0.88},{c:'Lung Cancer',r:0.84},{c:'COPD',r:0.79},
+    {c:'Colorectal Cancer',r:0.66},{c:'Pancreatic Cancer',r:0.60},{c:'Atrial Fibrillation',r:0.49},
+  ],
+  'Black Caribbean':[
+    {c:'Hypertensive Diseases',r:3.1},{c:'Stroke',r:2.4},{c:'Diabetes',r:2.2},
+    {c:'Chronic Kidney Disease',r:2.1},{c:'Heart Failure',r:1.8},{c:'Covid-19',r:1.7},
+    {c:'Myocardial Infarction',r:1.3},{c:'Pneumonia',r:1.2},{c:'All Cause Mortality',r:1.1},
+    {c:'Lung Cancer',r:0.9},{c:'COPD',r:0.8},{c:'Malignant Melanoma',r:0.3},
+  ],
+  'Indian':[
+    {c:'Diabetes',r:2.8},{c:'Chronic Kidney Disease',r:2.0},{c:'Hypertensive Diseases',r:1.7},
+    {c:'Myocardial Infarction',r:1.6},{c:'Covid-19',r:1.5},{c:'Stroke',r:1.4},
+    {c:'Heart Failure',r:1.1},{c:'All Cause Mortality',r:0.95},{c:'Lung Cancer',r:0.7},
+    {c:'COPD',r:0.6},{c:'Malignant Melanoma',r:0.4},
+  ],
+  'Pakistani':[
+    {c:'Diabetes',r:3.2},{c:'Asthma',r:2.9},{c:'Chronic Kidney Disease',r:2.3},
+    {c:'Hypertensive Diseases',r:2.1},{c:'Myocardial Infarction',r:2.0},{c:'Covid-19',r:1.9},
+    {c:'Stroke',r:1.6},{c:'Cardiac Arrest',r:1.5},{c:'All Cause Mortality',r:1.05},
+    {c:'Lung Cancer',r:0.75},{c:'COPD',r:0.65},
+  ],
+  'Chinese':[
+    {c:'Chronic Kidney Disease',r:1.5},{c:'Diabetes',r:1.4},{c:'Stroke',r:1.2},
+    {c:'All Cause Mortality',r:0.7},{c:'COPD',r:0.4},{c:'Lung Cancer',r:0.5},
+    {c:'Malignant Melanoma',r:0.3},
+  ],
+  'Black African':[
+    {c:'Hypertensive Diseases',r:2.4},{c:'Chronic Kidney Disease',r:2.0},{c:'Diabetes',r:1.8},
+    {c:'Stroke',r:1.7},{c:'Covid-19',r:1.6},{c:'All Cause Mortality',r:1.0},
+    {c:'Lung Cancer',r:0.8},{c:'COPD',r:0.5},
+  ],
+};
+
+const ethGroups = Object.keys(ethData);
+let activeEth = ethGroups[0];
+let chart2;
+
+function buildEthTabs(){
+  const el = document.getElementById('eth-tabs');
+  el.innerHTML = ethGroups.map(g=>`<button class="tab-btn${g===activeEth?' active':''}" onclick="setEth('${g}')">${g}</button>`).join('');
+}
+
+function renderChart2(){
+  const data = ethData[activeEth];
+  const labels = data.map(d=>d.c);
+  const vals = data.map(d=>d.r);
+  const colors = vals.map(barColor);
+  const ctx = document.getElementById('chart2').getContext('2d');
+  if(chart2) chart2.destroy();
+  const h = Math.max(280, labels.length*38+80);
+  document.getElementById('chart2').parentElement.style.height = h+'px';
+  chart2 = new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toFixed(2)+'× vs White British'}}},
+      scales:{
+        x:{min:0,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},callback:v=>v+'×'},
+          annotations:{line1:{type:'line',x:1,borderColor:'#888',borderWidth:1,borderDash:[4,4]}}},
+        y:{grid:{display:false},ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+window.setEth = function(e){activeEth=e;buildEthTabs();renderChart2();};
+
+const heatmapData = {
+  ethnicities:['Bangladeshi','Black African','Black Caribbean','Chinese','Indian','Mixed','Other','Pakistani','White British','White other'],
+  quintiles:['1 (Most\nDeprived)','2','3','4','5 (Least\nDeprived)'],
+  values:[
+    [472.7,407.1,413.3,322.0,379.4],
+    [139.9,142.2,175.1,137.6,105.6],
+    [278.1,250.4,217.0,198.2,216.1],
+    [145.6,112.4,126.3,102.2,86.8],
+    [310.3,267.6,237.5,209.1,173.0],
+    [166.6,172.4,130.8,147.6,109.9],
+    [206.2,200.1,179.1,139.0,122.6],
+    [361.3,349.0,313.7,249.5,222.1],
+    [184.2,140.9,111.2,95.2,75.5],
+    [153.2,124.4,103.4,89.3,73.4],
+  ]
+};
+
+function heatColor(val,min,max){
+  const t=(val-min)/(max-min);
+  if(t>0.75) return {bg:'#F7C1C1',color:'#791F1F'};
+  if(t>0.5)  return {bg:'#FAC775',color:'#633806'};
+  if(t>0.25) return {bg:'#C0DD97',color:'#27500A'};
+  return {bg:'#B5D4F4',color:'#0C447C'};
+}
+
+function buildHeatmap(){
+  const all = heatmapData.values.flat();
+  const mn = Math.min(...all), mx = Math.max(...all);
+  const tbl = document.getElementById('heatmap-table');
+  const qLabels = ['Most deprived','2','3','4','Least deprived'];
+  let html = '<thead><tr><th>Ethnic group</th>'+qLabels.map(q=>`<th>${q}</th>`).join('')+'</tr></thead><tbody>';
+  heatmapData.ethnicities.forEach((eth,i)=>{
+    html += `<tr><td>${eth}</td>`;
+    heatmapData.values[i].forEach(v=>{
+      const {bg,color} = heatColor(v,mn,mx);
+      html += `<td style="background:${bg};color:${color}">${v.toFixed(1)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+
+const regionalData = {
+  'All Cause Mortality':{'East Midlands':1838.4,'East of England':1737.8,'London':1058.1,'North East':2040.8,'North West':1890.9,'South East':1710.1,'South West':1980.6,'West Midlands':1826.3,'Yorkshire':1863.8},
+  'COPD':{'East Midlands':206.4,'East of England':344.5,'London':115.7,'North East':506.5,'North West':226.1,'South East':174.6,'South West':302.3,'West Midlands':390.4,'Yorkshire':410.8},
+  'Lung Cancer':{'East Midlands':105.2,'East of England':91.0,'London':58.9,'North East':269.3,'North West':123.3,'South East':88.6,'South West':175.1,'West Midlands':96.4,'Yorkshire':119.1},
+  'Diabetes':{'East Midlands':258.7,'East of England':224.8,'London':167.8,'North East':231.1,'North West':191.3,'South East':194.7,'South West':186.3,'West Midlands':252.4,'Yorkshire':224.0},
+  'Dementia':{'East Midlands':334.6,'East of England':313.2,'London':215.4,'North East':734.3,'North West':309.5,'South East':320.2,'South West':637.6,'West Midlands':353.4,'Yorkshire':314.7},
+  'Pneumonia':{'East Midlands':287.9,'East of England':247.6,'London':196.1,'North East':328.4,'North West':330.0,'South East':282.9,'South West':282.8,'West Midlands':298.3,'Yorkshire':309.2},
+};
+
+const condNames = Object.keys(regionalData);
+let activeCond = condNames[0];
+let chart4;
+
+function buildCondTabs(){
+  const el = document.getElementById('cond-tabs');
+  el.innerHTML = condNames.map(c=>`<button class="tab-btn${c===activeCond?' active':''}" onclick="setCond('${c}')">${c}</button>`).join('');
+}
+
+function renderChart4(){
+  const vals = regionalData[activeCond];
+  const labels = Object.keys(vals);
+  const data = Object.values(vals);
+  const max = Math.max(...data);
+  const colors = data.map(v=>{
+    const t=v/max;
+    if(t>0.85) return '#E24B4A';
+    if(t>0.65) return '#EF9F27';
+    return '#378ADD';
+  });
+  const ctx = document.getElementById('chart4').getContext('2d');
+  if(chart4) chart4.destroy();
+  chart4 = new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+Math.round(c.raw)+' per 100k'}}},
+      scales:{
+        x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},callback:v=>Math.round(v)}},
+        y:{grid:{display:false},ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+window.setCond = function(c){activeCond=c;buildCondTabs();renderChart4();};
+
+buildGrpTabs(); renderChart1();
+buildEthTabs(); renderChart2();
+buildHeatmap();
+buildCondTabs(); renderChart4();
+</script>
