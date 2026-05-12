@@ -1,4 +1,27 @@
-
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Geography of Preventable Death in England</title>
+<style>
+:root {
+  --color-text-primary: #1f2328;
+  --color-text-secondary: #59636e;
+  --color-text-tertiary: #818b98;
+  --color-text-info: #0969da;
+  --color-background-secondary: #f6f8fa;
+  --color-background-info: #ddf4ff;
+  --color-border-secondary: #d0d7de;
+  --color-border-tertiary: #d8dee4;
+  --color-border-info: #54aeff;
+  --border-radius-md: 6px;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--color-text-primary); max-width: 1100px; margin: 0 auto; padding: 1rem 1.5rem 4rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+</style>
+</head>
+<body>
 <h2 class="sr-only">NHS England mortality inequality dashboard showing four findings: deprivation gradients, ethnic disparities, the deprivation-ethnicity interaction for diabetes, and regional mortality variation.</h2>
 
 <style>
@@ -8,6 +31,7 @@
 .finding-label { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-tertiary); margin: 0 0 4px; }
 .section-title { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
 .section-desc { font-size: 13px; color: var(--color-text-secondary); margin: 0 0 1rem; line-height: 1.5; }
+.section-note { font-size: 11px; color: var(--color-text-tertiary); margin: 0 0 1rem; font-style: italic; }
 .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
 .stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
 .stat-label { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px; }
@@ -56,22 +80,23 @@
   <p class="finding-label">Finding 1</p>
   <p class="section-title">Deprivation gradient by condition</p>
   <p class="section-desc">Age-standardised mortality rate ratio: most deprived vs least deprived decile. Select a condition group to filter.</p>
-  <div class="tab-row" id="grp-tabs"></div>
+  <div class="tab-row" id="grp-tabs" role="tablist" aria-label="Condition group filter"></div>
   <div class="legend-row">
     <span class="legend-item"><span class="legend-swatch" style="background:#E24B4A"></span>4× or more</span>
     <span class="legend-item"><span class="legend-swatch" style="background:#EF9F27"></span>2–4×</span>
     <span class="legend-item"><span class="legend-swatch" style="background:#639922"></span>1–2×</span>
     <span class="legend-item"><span class="legend-swatch" style="background:#378ADD"></span>Below 1× (reverse)</span>
   </div>
-  <div style="position:relative;width:100%;height:340px;"><canvas id="chart1" role="img" aria-label="Bar chart of deprivation rate ratios for conditions, highest COPD at 4.69x"></canvas></div>
+  <div style="position:relative;width:100%;height:340px;"><canvas id="chart1" role="img" aria-label="Bar chart of deprivation rate ratios for conditions"></canvas></div>
 </div>
 
 <div class="section-block">
   <p class="finding-label">Finding 2</p>
   <p class="section-title">Ethnic mortality ratios vs White British baseline</p>
-  <p class="section-desc">Select an ethnic group to see how their mortality compares to White British across all conditions.</p>
-  <div class="tab-row" id="eth-tabs"></div>
-  <div style="position:relative;width:100%;height:340px;"><canvas id="chart2" role="img" aria-label="Bar chart showing ethnic mortality rate ratios vs White British baseline"></canvas></div>
+  <p class="section-desc">Select an ethnic group to see how their mortality compares to White British across conditions. Dashed line marks parity (1.0×).</p>
+  <p class="section-note">Bangladeshi ratios are reported from ONS to 2 d.p.; remaining groups are illustrative approximations rounded to 1 d.p.</p>
+  <div class="tab-row" id="eth-tabs" role="tablist" aria-label="Ethnic group selector"></div>
+  <div style="position:relative;width:100%;height:340px;"><canvas id="chart2" role="img" aria-label="Bar chart of ethnic mortality rate ratios vs White British"></canvas></div>
 </div>
 
 <div class="section-block">
@@ -85,12 +110,17 @@
   <p class="finding-label">Finding 4</p>
   <p class="section-title">Regional all-cause mortality across England</p>
   <p class="section-desc">Deaths per 100,000 person-years. Select a condition to compare regions.</p>
-  <div class="tab-row" id="cond-tabs"></div>
-  <div style="position:relative;width:100%;height:300px;"><canvas id="chart4" role="img" aria-label="Horizontal bar chart comparing mortality rates across 9 NHS England regions"></canvas></div>
+  <div class="tab-row" id="cond-tabs" role="tablist" aria-label="Condition selector"></div>
+  <div style="position:relative;width:100%;height:300px;"><canvas id="chart4" role="img" aria-label="Horizontal bar chart of mortality across 9 NHS England regions"></canvas></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
+(function(){
+'use strict';
+
+// ---------- Data ----------
 const deprivData = [
   {c:'Chronic Obstructive Pulmonary Disease',g:'Respiratory',r:4.69},
   {c:'Lung Cancer',g:'Cancer',r:3.51},
@@ -121,51 +151,6 @@ const deprivData = [
   {c:'Brain Tumours',g:'Cancer',r:0.97},
   {c:'Malignant Melanoma',g:'Cancer',r:0.67},
 ];
-
-const groups = ['All',...[...new Set(deprivData.map(d=>d.g))].filter(g=>g!=='All')];
-let activeGrp = 'All';
-
-function barColor(r){
-  if(r>=4) return '#E24B4A';
-  if(r>=2) return '#EF9F27';
-  if(r>=1) return '#639922';
-  return '#378ADD';
-}
-
-function buildGrpTabs(){
-  const el = document.getElementById('grp-tabs');
-  el.innerHTML = groups.map(g=>`<button class="tab-btn${g===activeGrp?' active':''}" onclick="setGrp('${g}')">${g}</button>`).join('');
-}
-
-let chart1;
-function renderChart1(){
-  const filtered = activeGrp==='All'?deprivData:deprivData.filter(d=>d.g===activeGrp);
-  const labels = filtered.map(d=>d.c);
-  const vals = filtered.map(d=>d.r);
-  const colors = vals.map(barColor);
-  const ctx = document.getElementById('chart1').getContext('2d');
-  if(chart1) chart1.destroy();
-  const h = Math.max(280, labels.length*38+80);
-  document.getElementById('chart1').parentElement.style.height = h+'px';
-  chart1 = new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
-    options:{
-      indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toFixed(2)+'× ratio'}}},
-      scales:{
-        x:{min:0,max:5.2,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},callback:v=>v+'×'}},
-        y:{grid:{display:false},ticks:{font:{size:11}}}
-      }
-    }
-  });
-}
-
-window.setGrp = function(g){
-  activeGrp=g;
-  buildGrpTabs();
-  renderChart1();
-};
 
 const ethData = {
   'Bangladeshi':[
@@ -207,44 +192,9 @@ const ethData = {
   ],
 };
 
-const ethGroups = Object.keys(ethData);
-let activeEth = ethGroups[0];
-let chart2;
-
-function buildEthTabs(){
-  const el = document.getElementById('eth-tabs');
-  el.innerHTML = ethGroups.map(g=>`<button class="tab-btn${g===activeEth?' active':''}" onclick="setEth('${g}')">${g}</button>`).join('');
-}
-
-function renderChart2(){
-  const data = ethData[activeEth];
-  const labels = data.map(d=>d.c);
-  const vals = data.map(d=>d.r);
-  const colors = vals.map(barColor);
-  const ctx = document.getElementById('chart2').getContext('2d');
-  if(chart2) chart2.destroy();
-  const h = Math.max(280, labels.length*38+80);
-  document.getElementById('chart2').parentElement.style.height = h+'px';
-  chart2 = new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
-    options:{
-      indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw.toFixed(2)+'× vs White British'}}},
-      scales:{
-        x:{min:0,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},callback:v=>v+'×'},
-          annotations:{line1:{type:'line',x:1,borderColor:'#888',borderWidth:1,borderDash:[4,4]}}},
-        y:{grid:{display:false},ticks:{font:{size:11}}}
-      }
-    }
-  });
-}
-
-window.setEth = function(e){activeEth=e;buildEthTabs();renderChart2();};
-
 const heatmapData = {
   ethnicities:['Bangladeshi','Black African','Black Caribbean','Chinese','Indian','Mixed','Other','Pakistani','White British','White other'],
-  quintiles:['1 (Most\nDeprived)','2','3','4','5 (Least\nDeprived)'],
+  quintileLabels:['Most deprived','2','3','4','Least deprived'],
   values:[
     [472.7,407.1,413.3,322.0,379.4],
     [139.9,142.2,175.1,137.6,105.6],
@@ -259,32 +209,6 @@ const heatmapData = {
   ]
 };
 
-function heatColor(val,min,max){
-  const t=(val-min)/(max-min);
-  if(t>0.75) return {bg:'#F7C1C1',color:'#791F1F'};
-  if(t>0.5)  return {bg:'#FAC775',color:'#633806'};
-  if(t>0.25) return {bg:'#C0DD97',color:'#27500A'};
-  return {bg:'#B5D4F4',color:'#0C447C'};
-}
-
-function buildHeatmap(){
-  const all = heatmapData.values.flat();
-  const mn = Math.min(...all), mx = Math.max(...all);
-  const tbl = document.getElementById('heatmap-table');
-  const qLabels = ['Most deprived','2','3','4','Least deprived'];
-  let html = '<thead><tr><th>Ethnic group</th>'+qLabels.map(q=>`<th>${q}</th>`).join('')+'</tr></thead><tbody>';
-  heatmapData.ethnicities.forEach((eth,i)=>{
-    html += `<tr><td>${eth}</td>`;
-    heatmapData.values[i].forEach(v=>{
-      const {bg,color} = heatColor(v,mn,mx);
-      html += `<td style="background:${bg};color:${color}">${v.toFixed(1)}</td>`;
-    });
-    html += '</tr>';
-  });
-  html += '</tbody>';
-  tbl.innerHTML = html;
-}
-
 const regionalData = {
   'All Cause Mortality':{'East Midlands':1838.4,'East of England':1737.8,'London':1058.1,'North East':2040.8,'North West':1890.9,'South East':1710.1,'South West':1980.6,'West Midlands':1826.3,'Yorkshire':1863.8},
   'COPD':{'East Midlands':206.4,'East of England':344.5,'London':115.7,'North East':506.5,'North West':226.1,'South East':174.6,'South West':302.3,'West Midlands':390.4,'Yorkshire':410.8},
@@ -294,46 +218,171 @@ const regionalData = {
   'Pneumonia':{'East Midlands':287.9,'East of England':247.6,'London':196.1,'North East':328.4,'North West':330.0,'South East':282.9,'South West':282.8,'West Midlands':298.3,'Yorkshire':309.2},
 };
 
+// ---------- Helpers ----------
+function ratioColor(r){
+  if(r>=4) return '#E24B4A';
+  if(r>=2) return '#EF9F27';
+  if(r>=1) return '#639922';
+  return '#378ADD';
+}
+
+function heatColor(t){
+  if(t>0.75) return {bg:'#F7C1C1',color:'#791F1F'};
+  if(t>0.5)  return {bg:'#FAC775',color:'#633806'};
+  if(t>0.25) return {bg:'#C0DD97',color:'#27500A'};
+  return {bg:'#B5D4F4',color:'#0C447C'};
+}
+
+function regionColor(t){
+  if(t>0.85) return '#E24B4A';
+  if(t>0.65) return '#EF9F27';
+  return '#378ADD';
+}
+
+// Build a tab row with delegated click handling and ARIA state
+function buildTabs(containerId, items, getActive, onSelect){
+  const el = document.getElementById(containerId);
+  function render(){
+    const active = getActive();
+    el.innerHTML = items.map(it =>
+      `<button type="button" role="tab" class="tab-btn${it===active?' active':''}" data-value="${it.replace(/"/g,'&quot;')}" aria-selected="${it===active}">${it}</button>`
+    ).join('');
+  }
+  el.addEventListener('click', e => {
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    onSelect(btn.dataset.value);
+    render();
+  });
+  render();
+  return render;
+}
+
+// Generic horizontal bar chart renderer
+const chartInstances = {};
+function renderBarChart({canvasId, labels, values, colors, tooltipFmt, xMax, ariaLabel, annotationLine}){
+  const canvas = document.getElementById(canvasId);
+  if(ariaLabel) canvas.setAttribute('aria-label', ariaLabel);
+  const h = Math.max(280, labels.length*38+80);
+  canvas.parentElement.style.height = h+'px';
+  if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+  const options = {
+    indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label: c => ' ' + tooltipFmt(c.raw)}}
+    },
+    scales:{
+      x:{min:0, grid:{color:'rgba(128,128,128,0.1)'}, ticks:{font:{size:11}}},
+      y:{grid:{display:false}, ticks:{font:{size:11}}}
+    }
+  };
+  if(typeof xMax === 'number') options.scales.x.max = xMax;
+  if(annotationLine && window['chartjs-plugin-annotation']){
+    options.plugins.annotation = {
+      annotations: {
+        parity: {
+          type:'line', xMin: annotationLine.value, xMax: annotationLine.value,
+          borderColor:'#888', borderWidth:1, borderDash:[4,4],
+          label:{display:false}
+        }
+      }
+    };
+  }
+  if(canvasId === 'chart1' || canvasId === 'chart2'){
+    options.scales.x.ticks.callback = v => v + '×';
+  } else {
+    options.scales.x.ticks.callback = v => Math.round(v);
+  }
+  chartInstances[canvasId] = new Chart(canvas.getContext('2d'), {
+    type:'bar',
+    data:{labels, datasets:[{data:values, backgroundColor:colors, borderRadius:4, borderSkipped:false}]},
+    options
+  });
+}
+
+// ---------- Finding 1: deprivation gradient ----------
+const groups = ['All', ...[...new Set(deprivData.map(d=>d.g))].filter(g=>g!=='All')];
+let activeGrp = 'All';
+
+function renderChart1(){
+  const filtered = activeGrp==='All' ? deprivData : deprivData.filter(d=>d.g===activeGrp);
+  renderBarChart({
+    canvasId:'chart1',
+    labels: filtered.map(d=>d.c),
+    values: filtered.map(d=>d.r),
+    colors: filtered.map(d=>ratioColor(d.r)),
+    tooltipFmt: v => v.toFixed(2) + '× ratio',
+    xMax: 5.2,
+    ariaLabel: `Deprivation rate ratios — ${activeGrp} conditions`,
+  });
+}
+buildTabs('grp-tabs', groups, () => activeGrp, v => { activeGrp = v; renderChart1(); });
+renderChart1();
+
+// ---------- Finding 2: ethnic ratios ----------
+const ethGroups = Object.keys(ethData);
+let activeEth = ethGroups[0];
+
+function renderChart2(){
+  const rows = ethData[activeEth];
+  renderBarChart({
+    canvasId:'chart2',
+    labels: rows.map(d=>d.c),
+    values: rows.map(d=>d.r),
+    colors: rows.map(d=>ratioColor(d.r)),
+    tooltipFmt: v => v.toFixed(2) + '× vs White British',
+    ariaLabel: `Mortality ratios for ${activeEth} vs White British`,
+    annotationLine: {value: 1},
+  });
+}
+buildTabs('eth-tabs', ethGroups, () => activeEth, v => { activeEth = v; renderChart2(); });
+renderChart2();
+
+// ---------- Finding 3: heatmap ----------
+function buildHeatmap(){
+  const all = heatmapData.values.flat();
+  const mn = Math.min(...all), mx = Math.max(...all);
+  const tbl = document.getElementById('heatmap-table');
+  let html = '<thead><tr><th scope="col">Ethnic group</th>'
+    + heatmapData.quintileLabels.map(q=>`<th scope="col">${q}</th>`).join('')
+    + '</tr></thead><tbody>';
+  heatmapData.ethnicities.forEach((eth,i)=>{
+    html += `<tr><th scope="row" style="font-weight:400;text-align:left;color:var(--color-text-primary)">${eth}</th>`;
+    heatmapData.values[i].forEach(v=>{
+      const t = (v - mn) / (mx - mn);
+      const {bg,color} = heatColor(t);
+      html += `<td style="background:${bg};color:${color}">${v.toFixed(1)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+buildHeatmap();
+
+// ---------- Finding 4: regional ----------
 const condNames = Object.keys(regionalData);
 let activeCond = condNames[0];
-let chart4;
-
-function buildCondTabs(){
-  const el = document.getElementById('cond-tabs');
-  el.innerHTML = condNames.map(c=>`<button class="tab-btn${c===activeCond?' active':''}" onclick="setCond('${c}')">${c}</button>`).join('');
-}
 
 function renderChart4(){
   const vals = regionalData[activeCond];
   const labels = Object.keys(vals);
-  const data = Object.values(vals);
-  const max = Math.max(...data);
-  const colors = data.map(v=>{
-    const t=v/max;
-    if(t>0.85) return '#E24B4A';
-    if(t>0.65) return '#EF9F27';
-    return '#378ADD';
-  });
-  const ctx = document.getElementById('chart4').getContext('2d');
-  if(chart4) chart4.destroy();
-  chart4 = new Chart(ctx,{
-    type:'bar',
-    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
-    options:{
-      indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+Math.round(c.raw)+' per 100k'}}},
-      scales:{
-        x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},callback:v=>Math.round(v)}},
-        y:{grid:{display:false},ticks:{font:{size:11}}}
-      }
-    }
+  const values = Object.values(vals);
+  const max = Math.max(...values);
+  renderBarChart({
+    canvasId:'chart4',
+    labels,
+    values,
+    colors: values.map(v => regionColor(v/max)),
+    tooltipFmt: v => Math.round(v) + ' per 100k',
+    ariaLabel: `Regional mortality — ${activeCond}`,
   });
 }
+buildTabs('cond-tabs', condNames, () => activeCond, v => { activeCond = v; renderChart4(); });
+renderChart4();
 
-window.setCond = function(c){activeCond=c;buildCondTabs();renderChart4();};
-
-buildGrpTabs(); renderChart1();
-buildEthTabs(); renderChart2();
-buildHeatmap();
-buildCondTabs(); renderChart4();
+})();
 </script>
+</body>
+</html>
