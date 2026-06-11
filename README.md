@@ -98,8 +98,7 @@ Download the ONS dataset and place it in the project root before running. The no
 
 ## Author
 
-**Caleb** — MSc Energy Management, University of East London
-Google Data Analytics Certificate · London, UK
+**jeff-dev**
 [github.com/je-ffdev](https://github.com/je-ffdev)
 
 ---
